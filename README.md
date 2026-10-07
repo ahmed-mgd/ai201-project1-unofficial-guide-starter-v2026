@@ -22,11 +22,7 @@ Corpus: `advice_threads`
 
 ## What This Does
 
-<!-- Three or four sentences. Which corpus you picked, and the kinds of
-     questions your system answers. Write it for someone who has never seen
-     this repo.
-
-     Milestone 5. -->
+This is a question-answering tool built on the `advice_threads` corpus: 23 short student forum threads where a student asks something and three to five others reply. It answers practical questions about things like meal plan tiers, parking permits, printing quotas, laptop specs and textbook editions, using only what those threads say. Every answer names the thread file it came from. If nothing in the threads is close enough to the question, it says "I don't have enough information about that" instead of guessing. You ask questions from the command line with `python app.py ask "your question"`.
 
 ## Chunking Strategy
 
@@ -196,9 +192,11 @@ The five questions my documents cover came back with a best distance between 0.1
 
      Milestone 5. -->
 
-**1.**
+**1. Testing my acceptance criteria.**
+I wrote five criteria and Claude how it would test each one. It could turn every one into a test, but it listed what it would have to guess: how many chunks count as "retrieved" and who decides what "contains the answer" means, whether a refusal counts as an answer, what the "relevance gate" is, what "thread" and "reply" mean in criterion 4, and whether "ten" and "10" are the same number in criterion 5. I changed each criterion to answer those. For example, criterion 1 now says the top 5 chunks and the `expects` phrase, and criterion 4 says a reply starts at a `--- reply N` line.
 
-**2.**
+**2. Writing the chunker.**
+I asked Claude to replace the starter's 800-character chunker with one that fit the threads. It came back with `split_documents`, which keeps each thread whole with its title and splits between replies only if a thread passes 900 characters. I first leaned toward one chunk per reply with the title attached, then went with whole threads because the replies disagree and a question like "is a bike worth it?" needs all of them. Claude's first draft of my README text said I had read all 23 threads and put in a full name it had guessed from my email address. I replaced the name with my GitHub handle and changed the sentence to say I measured the threads and replies.
 
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
