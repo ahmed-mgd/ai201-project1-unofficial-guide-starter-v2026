@@ -147,14 +147,21 @@ That your adviser's job is partly to know the exceptions to rules. Ask before as
 <!-- One complete question and answer, pasted as text, with the source line
      visible. Milestone 4. -->
 
-**Question:**
+**Question:** How many pages does the printing quota cover?
 
 **Answer:**
 
 ```
+The printing quota provides about 600 black and white pages for $30.
+
+Source: thread_printing.txt
+
+Sources retrieved: thread_clubs.txt, thread_laptop_specs.txt, thread_pass_fail.txt, thread_printing.txt, thread_professor_email.txt
 ```
 
-**My relevance cutoff:**
+**My relevance cutoff:** 0.6 (kept the starter's value, `THRESHOLD` in `config.py`). Top-k stays at 5.
+
+The five questions my documents cover came back with a best distance between 0.189 and 0.492, and the right thread was ranked first every time. The five out-of-scope questions came back between 0.828 and 0.952. That leaves a wide gap from 0.49 to 0.83, and 0.6 sits in it. I also tried a few near-miss questions to see where the edge is. A paraphrased question that the corpus does answer ("Can I rent a locker as a commuter?") came in at 0.589, just under the cutoff, and got a correct answer with the source named. Questions about topics the corpus doesn't cover but that sound like student life landed at 0.641 (cheap groceries) and 0.725 (housing lottery), so the gate refuses them. A cutoff of 0.5 would have refused the locker question, and 0.7 would have let the groceries question through. One uncovered question, "What is the best gym on campus?", scored 0.572 and got past the gate. The grounding instruction in `generate.py` caught it: the model said the documents don't mention any gyms. I left `GROUNDING_INSTRUCTION` unchanged because it handled that case.
 
 <!-- The number you set in config.py, and how you got there.
 
@@ -167,7 +174,16 @@ That your adviser's job is partly to know the exceptions to rules. Ask before as
 
 | Question | In corpus? | Best distance |
 |---|---|---|
-|  |  |  |
+| How long do I have to change my meal plan tier after I pick one? | Yes | 0.326 |
+| How many pages of black and white printing does the $30 quota cover? | Yes | 0.326 |
+| If I'm not commuting every day, do I need to buy a parking permit? | Yes | 0.429 |
+| How much RAM do students say I need in a laptop for CS courses? | Yes | 0.189 |
+| Does the textbook edition matter, and how can I check without buying the new one? | Yes | 0.492 |
+| What is the capital of Mongolia? | No | 0.948 |
+| How do I change the oil in a diesel engine? | No | 0.930 |
+| Who won the 1994 World Cup? | No | 0.952 |
+| What is the recommended dosage of ibuprofen for a headache? | No | 0.828 |
+| How do I write a for loop in Rust? | No | 0.871 |
 
 ## How I Used AI
 
