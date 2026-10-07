@@ -1,6 +1,7 @@
 # The Unofficial Guide
 
-<!-- Replace this line with your name and which corpus you picked. -->
+Ahmed Abdelmageed
+Corpus: `advice_threads`
 
 > **This file is your submission.** Fill it in as you go — most sections get
 > written during the milestone that produces them, not at the end.
@@ -29,8 +30,12 @@
 
 ## Chunking Strategy
 
-**Chunk size:**
-**Overlap:**
+**Chunk size:** one whole thread per chunk, about 543 characters on average (317 to 793). A cap of 900 characters is only there as a safety limit.
+**Overlap:** none in practice. If a thread ever exceeds the cap, it is split only between replies, and the last reply of one piece is repeated at the start of the next, so the overlap is one reply rather than a character count.
+
+I measured every thread and reply before choosing. Each thread is a question followed by three to five replies, and each reply is only 68 to 195 characters. A reply on its own doesn't mean much ("Yes. Cuts an 18 minute walk to about 6.") because the question is what makes it make sense. The replies also disagree with each other, so a question like "is a bike worth it?" is answered by the whole thread, not one reply. The longest thread is 812 characters, so none of them needed to be split.
+
+The starter's 800-character windows cut through threads at arbitrary points and left a 2-character fragment at the end of one document. I replaced them with `chunker.py::split_documents`, which splits on the `--- reply N` headers and keeps the title with the replies. I started out leaning toward one chunk per reply with the title attached, then dropped it because it would scatter the disagreement across chunks that retrieval might only partly return. The old splitter is still in the file as `fallback_split` for comparison in unit 2.
 
 <!-- What about YOUR documents made you pick these numbers? Short posts and
      long sectioned guides don't want the same chunking, and "800 seemed
@@ -53,29 +58,88 @@
 
      Milestone 3. -->
 
-**Chunk 1** — source: `` — produced by: ``
+**Chunk 1** — source: `thread_meal_plan_tier.txt` — produced by: `chunker.py::split_documents`
 
 ```
+THREAD: Which meal plan tier is right?
+
+--- reply 1 (24 votes) ---
+Depends entirely on whether your building has a kitchen. Fenwick has kitchenettes, so people there go down a tier and cook two or three nights. Everywhere else, get the middle tier.
+
+--- reply 2 (19 votes) ---
+The highest tier only makes sense if you eat three meals a day in the halls every single day, which basically nobody does past October.
+
+--- reply 3 (11 votes) ---
+Remember you can only change it once and only in the first ten days. I waited and got stuck on a plan I didn't use.
+
+--- reply 4 (7 votes) ---
+Declining balance rolls within the semester but not between them. Spend it in December or lose it.
 ```
 
-**Chunk 2** — source: `` — produced by: ``
+**Chunk 2** — source: `thread_parking.txt` — produced by: `chunker.py::split_documents`
 
 ```
+THREAD: Worth getting a parking permit?
+
+--- reply 1 (15 votes) ---
+West lots sell out in about three days in August. East lot never sells out but it's a 12 minute walk, at which point you might as well have parked on the street.
+
+--- reply 2 (21 votes) ---
+Street parking on Verrill is legal and free and unmarked, which is why half the upper years do it.
+
+--- reply 3 (8 votes) ---
+If you're commuting daily, the west permit is worth the August scramble. Otherwise don't bother.
 ```
 
-**Chunk 3** — source: `` — produced by: ``
+**Chunk 3** — source: `thread_printing.txt` — produced by: `chunker.py::split_documents`
 
 ```
+THREAD: Is the printing quota enough?
+
+--- reply 1 (17 votes) ---
+For most people yes. $30 is about 600 pages black and white. It's the colour printing that eats it — eight times the cost per page.
+
+--- reply 2 (11 votes) ---
+Doesn't roll over between semesters. Print your readings in December rather than losing it.
 ```
 
-**Chunk 4** — source: `` — produced by: ``
+**Chunk 4** — source: `thread_bike_commute.txt` — produced by: `chunker.py::split_documents`
 
 ```
+THREAD: Is a bike worth it for a 20 minute walk commute?
+
+--- reply 1 (14 votes) ---
+Yeah. Cuts an 18 minute walk to about 6. The thing nobody mentions is storage — covered bike parking exists at three buildings and is full by 9am at all three.
+
+--- reply 2 (9 votes) ---
+Counterpoint, I sold mine. Between November and March the paths are either icy or salted and salt destroys a drivetrain in one season.
+
+--- reply 3 (22 votes) ---
+Both true. I keep a cheap bike for September to November and walk the rest of the year. Total cost was about $120 for the bike and I don't care what happens to it.
+
+--- reply 4 (5 votes) ---
+If you do get one, the campus does free registration and it's the only reason I got mine back after it was taken.
 ```
 
-**Chunk 5** — source: `` — produced by: ``
+**Chunk 5** — source: `thread_first_year_regret.txt` — produced by: `chunker.py::split_documents`
 
 ```
+THREAD: What do you wish you'd known in first year?
+
+--- reply 1 (41 votes) ---
+That the add/drop deadline and the withdrawal deadline are different dates and only one of them is on the calendar everyone reads.
+
+--- reply 2 (28 votes) ---
+That you can take a course pass/fail and declare it late — up to week eight. I carried a grade I didn't need to.
+
+--- reply 3 (35 votes) ---
+That the writing centre will read a draft for any course, not just writing courses. Free, and the appointments go unbooked.
+
+--- reply 4 (52 votes) ---
+Honestly: that nobody is watching as closely as you think. I spent a year worried about looking like I knew what I was doing.
+
+--- reply 5 (17 votes) ---
+That your adviser's job is partly to know the exceptions to rules. Ask before assuming a deadline is fixed.
 ```
 
 ## Sample Answer

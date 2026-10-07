@@ -22,6 +22,7 @@ to it, write down what you saw, and move on. That's a real observation about
 your pipeline, not giving up.
 """
 
+import re
 from dataclasses import dataclass
 
 import config
@@ -80,24 +81,66 @@ def fallback_split(
     return chunks
 
 
+# A thread is a title line followed by replies, each opened by a header like
+# "--- reply 2 (9 votes) ---". Replies are 68 to 195 characters, and no reply
+# makes sense without the question above it.
+_REPLY_HEADER = re.compile(r"(?m)^--- reply \d+ \(\d+ votes\) ---$")
+
+# Threads run 400 to 810 characters. 900 keeps every current thread whole and
+# only forces a split on a thread longer than any of them.
+MAX_THREAD_CHARS = 900
+
+
 def split_documents(documents: list[Document]) -> list[Chunk]:
     """
-    Split documents into chunks. ⚠️ REPLACE THE BODY OF THIS IN MILESTONE 3.
+    Split advice threads into chunks, one thread per chunk.
 
-    Right now it just calls the fallback. That is the plain, generic behaviour
-    the brief is talking about.
+    A reply on its own ("Yes. Cuts an 18 minute walk to about 6.") means nothing
+    without the question, and the replies in a thread disagree with each other,
+    so the answer to a question like "is a bike worth it?" is the whole
+    thread. Each thread is kept together with its title line.
 
-    When you write your own strategy, set `produced_by` to
-    "chunker.py::split_documents" so your README's Sample Chunks section names
-    the right function. `app.py chunks` prints that string for you.
-
-    Things worth thinking about before you write any code:
-      - Are your documents short posts or long guides?
-      - Is the useful information in one sentence, or spread over a paragraph?
-      - Would splitting on paragraph breaks keep more thoughts intact than
-        splitting on a character count?
+    If a thread is longer than MAX_THREAD_CHARS, it is cut only between
+    replies, never inside one. Every piece repeats the title, and each piece
+    after the first starts with the last reply of the one before it, so the
+    overlap is one whole reply rather than a number of characters.
     """
-    return fallback_split(documents)
+    chunks: list[Chunk] = []
+    for doc in documents:
+        parts = _REPLY_HEADER.split(doc.text)
+        headers = _REPLY_HEADER.findall(doc.text)
+        title = parts[0].strip()
+        replies = [f"{h}\n{body.strip()}" for h, body in zip(headers, parts[1:])]
+
+        if not replies:  # not a thread; keep it whole rather than guess
+            pieces = [doc.text]
+        else:
+            pieces = _group_replies(title, replies)
+
+        for index, piece in enumerate(pieces):
+            chunks.append(
+                Chunk(
+                    text=piece,
+                    source=doc.source,
+                    index=index,
+                    produced_by="chunker.py::split_documents",
+                )
+            )
+    return chunks
+
+
+def _group_replies(title: str, replies: list[str]) -> list[str]:
+    """Pack whole replies under the title, up to MAX_THREAD_CHARS per piece."""
+    pieces: list[str] = []
+    current: list[str] = []
+    for reply in replies:
+        candidate = "\n\n".join([title, *current, reply])
+        if current and len(candidate) > MAX_THREAD_CHARS:
+            pieces.append("\n\n".join([title, *current]))
+            current = [current[-1]]  # one-reply overlap
+        current.append(reply)
+    pieces.append("\n\n".join([title, *current]))
+    return pieces
 
 
 def describe(chunks: list[Chunk]) -> str:
